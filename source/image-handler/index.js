@@ -14,8 +14,25 @@
 const ImageRequest = require('./image-request.js');
 const ImageHandler = require('./image-handler.js');
 
+// Check if execution is a warmup call
+const isWarmupCall = async inputData => {
+    if (inputData && inputData.source === 'triggerWarmup') {
+        console.log('WARMUP: Warmup call triggered by triggerWarmup on ImageHandler');
+  
+        // Maintain execution for one second to make sure the expected number of warm
+        // containers are maintained when the Lambda is trigged with a real request
+        await new Promise(resolve => setTimeout(resolve, 1000));
+  
+        return true;
+    }
+};
+
 exports.handler = async (event) => {
     console.log(event);
+
+    // Return early if this is a warmup call
+    if (await isWarmupCall(event)) return;
+
     const imageRequest = new ImageRequest();
     const imageHandler = new ImageHandler();
     try {
